@@ -12,8 +12,8 @@ public class Message {
         this.json = json;
     }
 
-    private String id;
-    private String json;
+    private final String id;
+    private final String json;
 
     public String getId() {
         // TODO use better identification for individual message in case of concurrent multiple publishers
@@ -27,9 +27,13 @@ public class Message {
     public static Message create(String json) {
         try {
             Object o = JsonUtils.gson.fromJson(json, Object.class);
-            return new Message(json);
+            if (o!=null) {
+                return new Message(json);
+            } else {
+                throw new MessageException("Invalid message body. Only json messages supported");
+            }
         } catch(Exception e) {
-            throw new MessageException("Invalid message body. Only json messages supported.");
+            throw new MessageException("Invalid message body. Only json messages supported", e);
         }
     }
 

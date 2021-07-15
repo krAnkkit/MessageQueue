@@ -32,7 +32,7 @@ public final class QueueManager {
                 qMap.put(qName, mq);
             }
         } catch(IOException iox) {
-            throw new PersistenceException("Error initializing storage for message queue");
+            throw new PersistenceException("Error initializing storage for message queue", iox);
         }
     }
 
@@ -44,7 +44,7 @@ public final class QueueManager {
             }
             return mq;
         } catch(IOException iox) {
-            throw new PersistenceException("Error creating new queue");
+            throw new PersistenceException("Error creating new queue", iox);
         }
     }
 }

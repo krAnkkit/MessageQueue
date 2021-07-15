@@ -22,7 +22,7 @@ public class DiskPersistence implements Persistence {
 
     private static final Logger LOGGER = Logger.getGlobal();
 
-    private Path queueDir;
+    private final Path queueDir;
 
     public DiskPersistence(final Path queueDir) {
         this.queueDir = queueDir;
@@ -32,7 +32,7 @@ public class DiskPersistence implements Persistence {
                 Files.createFile(subsPath);
             }
         } catch(IOException iox) {
-            throw new PersistenceException("Error persisting queue data");
+            throw new PersistenceException("Error persisting queue data", iox);
         }
     }
 
@@ -43,7 +43,7 @@ public class DiskPersistence implements Persistence {
             String payload = JsonUtils.gson.toJson(msg);
             Files.writeString(msgPath, payload, StandardOpenOption.WRITE);
         } catch(IOException iox) {
-            throw new PersistenceException("Error writing message to queue");
+            throw new PersistenceException("Error writing message to queue", iox);
         }
     }
 
@@ -52,7 +52,7 @@ public class DiskPersistence implements Persistence {
         try {
             Files.deleteIfExists(Paths.get(queueDir.toFile().getAbsolutePath(), msg.getId()));
         } catch (IOException e) {
-            throw new PersistenceException("Error cleaning up old message from queue");
+            throw new PersistenceException("Error cleaning up old message from queue", e);
         }
     }
 
@@ -77,7 +77,7 @@ public class DiskPersistence implements Persistence {
                 Files.writeString(subscriptionsPath, subscription, StandardOpenOption.WRITE);
             }
         } catch(IOException iox) {
-            throw new PersistenceException("Error writing subscriptions");
+            throw new PersistenceException("Error writing subscriptions", iox);
         }
     }
 
@@ -87,7 +87,7 @@ public class DiskPersistence implements Persistence {
             Path subscriptionsPath = Paths.get(queueDir.toAbsolutePath().toString(), "subscriptions");
             return Files.readAllLines(subscriptionsPath).stream().map(l -> JsonUtils.gson.fromJson(l, Subscription.class)).collect(Collectors.toList());
         } catch(IOException iox) {
-            throw new PersistenceException("Error reading subscriptions");
+            throw new PersistenceException("Error reading subscriptions", iox);
         }
     }
 }
