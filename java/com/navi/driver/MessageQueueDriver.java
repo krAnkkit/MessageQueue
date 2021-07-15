@@ -8,8 +8,9 @@ import com.navi.queue.QueueManager;
 public class MessageQueueDriver {
 
     public static void main(String[] args) throws SubscriptionException, MessageException {
-        MessageQueue q = QueueManager.get("q8");
+        MessageQueue q = QueueManager.get("q9");
         q.subscribe("http://amazon.com");
+        q.subscribe("https://ptsv2.com/t/r1wo9-1626329942/post");
         q.publish("{'a':'a'}");
         q.subscribe("http://facebook.com");
         q.unsubscribe("abc");
