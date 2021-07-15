@@ -1,9 +1,8 @@
 package com.navi.queue;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.google.gson.*;
 import com.navi.exceptions.MessageException;
-import com.navi.utils.JsonUtils;
+import com.navi.utils.Utils;
 
 public class Message {
 
@@ -24,15 +23,15 @@ public class Message {
         return json;
     }
 
-    public static Message create(String json) {
+    public static Message create(String json) throws MessageException {
         try {
-            Object o = JsonUtils.gson.fromJson(json, Object.class);
-            if (o!=null) {
+            JsonElement jem = JsonParser.parseString(json);
+            if (jem.isJsonObject()) {
                 return new Message(json);
             } else {
-                throw new MessageException("Invalid message body. Only json messages supported");
+                throw new MessageException("Invalid message body. Only json messages supported : " + json);
             }
-        } catch(Exception e) {
+        } catch (JsonSyntaxException e) {
             throw new MessageException("Invalid message body. Only json messages supported", e);
         }
     }

@@ -1,26 +1,24 @@
 package com.navi.persistence.impl;
 
+import com.google.gson.TypeAdapter;
+import com.google.gson.reflect.TypeToken;
 import com.navi.queue.Message;
 import com.navi.persistence.Persistence;
 import com.navi.exceptions.PersistenceException;
 import com.navi.queue.Subscription;
-import com.navi.utils.JsonUtils;
+import com.navi.utils.Utils;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 public class DiskPersistence implements Persistence {
-
-    private static final Logger LOGGER = Logger.getGlobal();
 
     private final Path queueDir;
 
@@ -40,7 +38,7 @@ public class DiskPersistence implements Persistence {
     public void writeMessage(Message msg) {
         try {
             Path msgPath = Files.createFile(Paths.get(queueDir.toFile().getAbsolutePath(), msg.getId()));
-            String payload = JsonUtils.gson.toJson(msg);
+            String payload = Utils.gson.toJson(msg);
             Files.writeString(msgPath, payload, StandardOpenOption.WRITE);
         } catch(IOException iox) {
             throw new PersistenceException("Error writing message to queue", iox);
@@ -62,19 +60,19 @@ public class DiskPersistence implements Persistence {
             try {
                 return Files.readString(f.toPath());
             } catch (IOException e) {
-                LOGGER.log(Level.WARNING, "Error reading contents of "+f.getAbsolutePath(), e);
+                Utils.logger.log(Level.WARNING, "Error reading contents of "+f.getAbsolutePath(), e);
             }
             return null;
-        }).filter(Objects::nonNull).map(s -> JsonUtils.gson.fromJson(s, Message.class)).collect(Collectors.toList());
+        }).filter(Objects::nonNull).map(s -> Utils.gson.fromJson(s, Message.class)).collect(Collectors.toList());
     }
 
     @Override
-    public void writeSubscriptions(List<Subscription> subs) {
+    public void writeSubscriptions(Collection<Subscription> subs) {
         try {
             Path subscriptionsPath = Paths.get(queueDir.toAbsolutePath().toString(), "subscriptions");
             for(Subscription s: subs) {
-                String subscription = JsonUtils.gson.toJson(s)+"\n";
-                Files.writeString(subscriptionsPath, subscription, StandardOpenOption.WRITE);
+                String subscription = Utils.gson.toJson(subs);
+                Files.writeString(subscriptionsPath, subscription, StandardOpenOption.TRUNCATE_EXISTING);
             }
         } catch(IOException iox) {
             throw new PersistenceException("Error writing subscriptions", iox);
@@ -85,8 +83,11 @@ public class DiskPersistence implements Persistence {
     public List<Subscription> readSubscriptions() {
         try {
             Path subscriptionsPath = Paths.get(queueDir.toAbsolutePath().toString(), "subscriptions");
-            return Files.readAllLines(subscriptionsPath).stream().map(l -> JsonUtils.gson.fromJson(l, Subscription.class)).collect(Collectors.toList());
-        } catch(IOException iox) {
+            String str = Files.readString(subscriptionsPath);
+            TypeToken<List<Subscription>> tt = new TypeToken<>() {};
+            List<Subscription> subs = Utils.gson.fromJson(str, tt.getType());
+            return subs != null ? subs : Collections.emptyList();
+       } catch(IOException iox) {
             throw new PersistenceException("Error reading subscriptions", iox);
         }
     }

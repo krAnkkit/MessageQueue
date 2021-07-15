@@ -1,6 +1,6 @@
 package com.navi.exceptions;
 
-public class MessageException extends RuntimeException {
+public class MessageException extends Exception {
     public MessageException(final String msg) {
         super(msg);
     }

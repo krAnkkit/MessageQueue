@@ -11,13 +11,14 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public final class QueueManager {
 
     private static final QueueManager INSTANCE = new QueueManager();
 
     private Path queueDir;
-    private Map<String, MessageQueue> qMap;
+    private final Map<String, MessageQueue> qMap;
 
     private QueueManager(){
         try {
@@ -26,9 +27,9 @@ public final class QueueManager {
             if (!Files.exists(queueDir)) {
                 queueDir = Files.createDirectories(queueDir);
             }
-            for(File qDir: queueDir.toFile().listFiles()) {
+            for(File qDir: Objects.requireNonNull(queueDir.toFile().listFiles())) {
                 String qName = qDir.getName();
-                MessageQueue mq = new DefaultMessageQueueImpl(qName, new DiskPersistence(qDir.toPath()));
+                MessageQueue mq = new DefaultMessageQueueImpl(new DiskPersistence(qDir.toPath()));
                 qMap.put(qName, mq);
             }
         } catch(IOException iox) {
@@ -40,7 +41,7 @@ public final class QueueManager {
         try {
             MessageQueue mq = INSTANCE.qMap.get(queueId);
             if (mq == null) {
-                mq = new DefaultMessageQueueImpl(queueId, new DiskPersistence(Files.createDirectory(Paths.get(INSTANCE.queueDir.toFile().getAbsolutePath(), queueId))));
+                mq = new DefaultMessageQueueImpl(new DiskPersistence(Files.createDirectory(Paths.get(INSTANCE.queueDir.toFile().getAbsolutePath(), queueId))));
             }
             return mq;
         } catch(IOException iox) {

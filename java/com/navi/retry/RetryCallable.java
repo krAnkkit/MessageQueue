@@ -1,6 +1,10 @@
 package com.navi.retry;
 
+import com.navi.utils.Utils;
+
 import java.util.concurrent.Callable;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class RetryCallable<T> implements Callable<T> {
     private Callable<T> core;
@@ -20,11 +24,13 @@ public class RetryCallable<T> implements Callable<T> {
         try{
             return core.call();
         } catch(Exception e) {
+            Utils.logger.log(Level.WARNING, "Error executing callable", e);
             err = e;
             while (config.proceed(++attempt, err)) {
                 try {
                     return core.call();
                 } catch(Exception ex) {
+                    Utils.logger.log(Level.WARNING, String.format("Error in retry %d", attempt), ex);
                     err = ex;
                 }
             }
